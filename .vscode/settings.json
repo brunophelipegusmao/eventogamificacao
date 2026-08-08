@@ -1,0 +1,9 @@
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.wordWrap": "on",
+  "editor.tabSize": 2,
+  "editor.formatOnPaste": true,
+  "editor.fontSize": 13,
+  "editor.formatOnSave": true,
+  "explorer.fileNesting.enabled": false
+}
