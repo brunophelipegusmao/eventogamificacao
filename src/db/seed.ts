@@ -1,9 +1,10 @@
 import "dotenv/config";
 import { db } from "./index";
-import { authAccount, authUser, task, prize } from "./schema";
+import { authAccount, authUser, task, prize, event } from "./schema";
 import { hashPassword } from "@better-auth/utils/password";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
+import { EVENT_ID } from "../lib/event";
 
 async function upsertUser(input: {
   email: string;
@@ -96,8 +97,24 @@ async function main() {
         status: "active",
         config: {
           fields: [
-            { key: "objetivo", label: "Qual seu principal objetivo?", required: true },
-            { key: "frequencia", label: "Quantas vezes treina por semana?", required: true },
+            {
+              key: "objetivo",
+              label: "Qual seu principal objetivo?",
+              type: "text",
+              required: true,
+            },
+            {
+              key: "frequencia",
+              label: "Quantas vezes treina por semana?",
+              type: "text",
+              required: true,
+            },
+            {
+              key: "aceite",
+              label: "Aceito receber novidades da JM Fitness",
+              type: "checkbox",
+              required: false,
+            },
           ],
         },
         sortOrder: 2,
@@ -161,6 +178,19 @@ async function main() {
     console.log("prêmios criados: 3");
   } else {
     console.log("prêmios já existem");
+  }
+
+  console.log("=== SEED: evento ===");
+  const [existingEvent] = await db
+    .select({ id: event.id })
+    .from(event)
+    .where(eq(event.id, EVENT_ID))
+    .limit(1);
+  if (!existingEvent) {
+    await db.insert(event).values({ id: EVENT_ID, status: "open" });
+    console.log("evento criado (aberto)");
+  } else {
+    console.log("evento já existe");
   }
 
   console.log("=== SEED FINALIZADO ===");

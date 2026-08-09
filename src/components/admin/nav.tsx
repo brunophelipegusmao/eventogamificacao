@@ -9,6 +9,7 @@ import {
   Inbox,
   Trophy,
   Users,
+  FileBarChart,
 } from "lucide-react";
 
 const items = [
@@ -17,6 +18,7 @@ const items = [
   { href: "/admin/confirmacoes", label: "Confirmações", icon: Inbox },
   { href: "/admin/ranking", label: "Ranking", icon: Trophy },
   { href: "/admin/participantes", label: "Participantes", icon: Users },
+  { href: "/admin/relatorio", label: "Relatório", icon: FileBarChart },
 ];
 
 export function AdminNav() {

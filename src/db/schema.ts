@@ -197,3 +197,42 @@ export const prize = pgTable(
   },
   (t) => [index("prize_active_idx").on(t.active)],
 );
+
+/* ============================================================
+ * EVENTO (status global)
+ * ============================================================ */
+
+export const eventStatusEnum = pgEnum("event_status", ["open", "closed"]);
+
+export const event = pgTable("event", {
+  id: text("id").primaryKey(),
+  status: eventStatusEnum("status").notNull().default("open"),
+  closedAt: timestamp("closed_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+/* ============================================================
+ * VENCEDORES (snapshot final do ranking)
+ * ============================================================ */
+
+export const winner = pgTable(
+  "winner",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => authUser.id, { onDelete: "cascade" }),
+    rank: integer("rank").notNull(),
+    totalPoints: integer("total_points").notNull().default(0),
+    prizeId: text("prize_id").references(() => prize.id, {
+      onDelete: "set null",
+    }),
+    prizeName: text("prize_name"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("winner_rank_idx").on(t.rank),
+    index("winner_user_idx").on(t.userId),
+  ],
+);

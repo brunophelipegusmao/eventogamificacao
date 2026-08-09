@@ -1,10 +1,10 @@
 "use client";
 
+import { Input } from "@base-ui/react/input";
+import { CheckCircle2, Clock, QrCode, Send, Trophy } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@base-ui/react/input";
-import { FieldGroup, FieldLabel } from "@/components/ui/field";
-import { CheckCircle2, Clock, QrCode, Send, Trophy } from "lucide-react";
+import { FieldLabel } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 
 type Completion = {
@@ -14,6 +14,13 @@ type Completion = {
   pointsAwarded: number;
 };
 
+type FormField = {
+  key: string;
+  label: string;
+  type: "text" | "checkbox";
+  required?: boolean;
+};
+
 type TaskItem = {
   id: string;
   title: string;
@@ -21,7 +28,7 @@ type TaskItem = {
   type: "checkin" | "form" | "qr_code" | "social";
   confirmation: "automatic" | "qr_code" | "admin";
   points: number;
-  config: { fields?: { key: string; label: string; required?: boolean }[] } | null;
+  config: { fields?: FormField[] } | null;
   completion: Completion | null;
 };
 
@@ -36,9 +43,15 @@ export function ParticipantTasksView() {
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<
+    Record<string, Record<string, string | boolean>>
+  >({});
   const [qrInput, setQrInput] = useState<Record<string, string>>({});
-  const [message, setMessage] = useState<{ id: string; text: string; error?: boolean } | null>(null);
+  const [message, setMessage] = useState<{
+    id: string;
+    text: string;
+    error?: boolean;
+  } | null>(null);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/participant/tasks");
@@ -54,8 +67,7 @@ export function ParticipantTasksView() {
   async function completeAutomatic(task: TaskItem) {
     setBusyId(task.id);
     setMessage(null);
-    const payload =
-      task.type === "form" ? formData[task.id] ?? {} : {};
+    const payload = task.type === "form" ? (formData[task.id] ?? {}) : {};
     const res = await fetch("/api/participant/complete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -116,7 +128,8 @@ export function ParticipantTasksView() {
       if (c.status === "approved") {
         return (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-sm font-medium text-emerald-400">
-            <CheckCircle2 className="size-4" /> Concluída (+{c.pointsAwarded} pts)
+            <CheckCircle2 className="size-4" /> Concluída (+{c.pointsAwarded}{" "}
+            pts)
           </span>
         );
       }
@@ -138,24 +151,58 @@ export function ParticipantTasksView() {
       return (
         <div className="space-y-3">
           {task.type === "form" && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {(task.config?.fields ?? []).map((f) => (
                 <div key={f.key}>
-                  <FieldLabel htmlFor={`f-${task.id}-${f.key}`} className="text-xs">
-                    {f.label}
-                  </FieldLabel>
-                  <Input
-                    id={`f-${task.id}-${f.key}`}
-                    required={f.required}
-                    value={formData[task.id]?.[f.key] ?? ""}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        [task.id]: { ...(prev[task.id] ?? {}), [f.key]: e.target.value },
-                      }))
-                    }
-                    className="mt-1 h-10 w-full rounded-lg border-border bg-background px-3"
-                  />
+                  {f.type === "checkbox" ? (
+                    <label className="flex cursor-pointer items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(formData[task.id]?.[f.key])}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            [task.id]: {
+                              ...(prev[task.id] ?? {}),
+                              [f.key]: e.target.checked,
+                            },
+                          }))
+                        }
+                        className="size-4 accent-primary"
+                      />
+                      {f.label}
+                      {f.required && (
+                        <span className="text-destructive">*</span>
+                      )}
+                    </label>
+                  ) : (
+                    <div>
+                      <FieldLabel
+                        htmlFor={`f-${task.id}-${f.key}`}
+                        className="text-xs"
+                      >
+                        {f.label}
+                        {f.required && (
+                          <span className="text-destructive"> *</span>
+                        )}
+                      </FieldLabel>
+                      <Input
+                        id={`f-${task.id}-${f.key}`}
+                        required={f.required}
+                        value={String(formData[task.id]?.[f.key] ?? "")}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            [task.id]: {
+                              ...(prev[task.id] ?? {}),
+                              [f.key]: e.target.value,
+                            },
+                          }))
+                        }
+                        className="mt-1 h-10 w-full rounded-lg border-border bg-background px-3"
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -234,7 +281,7 @@ export function ParticipantTasksView() {
                       "flex size-10 shrink-0 items-center justify-center rounded-lg",
                       task.completion?.status === "approved"
                         ? "bg-emerald-500/15 text-emerald-400"
-                        : "bg-primary/10 text-primary"
+                        : "bg-primary/10 text-primary",
                     )}
                   >
                     <Icon className="size-5" />
@@ -257,7 +304,7 @@ export function ParticipantTasksView() {
                   <p
                     className={cn(
                       "text-sm",
-                      message.error ? "text-destructive" : "text-emerald-400"
+                      message.error ? "text-destructive" : "text-emerald-400",
                     )}
                   >
                     {message.text}

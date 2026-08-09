@@ -15,6 +15,20 @@
       "when": 1786228951218,
       "tag": "0001_mysterious_havok",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786312251048,
+      "tag": "0002_legal_doomsday",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786312908716,
+      "tag": "0003_friendly_sugar_man",
+      "breakpoints": true
     }
   ]
 }

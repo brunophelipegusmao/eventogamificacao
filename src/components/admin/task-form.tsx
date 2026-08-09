@@ -1,12 +1,14 @@
 "use client";
 
+import { Input } from "@base-ui/react/input";
+import { CheckSquare, Plus, Trash2, Type } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@base-ui/react/input";
 import { FieldGroup, FieldLabel } from "@/components/ui/field";
 
 type ConfirmationType = "automatic" | "qr_code" | "admin";
 type TaskType = "checkin" | "form" | "qr_code" | "social";
+type FieldType = "text" | "checkbox";
 
 const TYPE_LABELS: Record<TaskType, string> = {
   checkin: "Check-in",
@@ -15,11 +17,14 @@ const TYPE_LABELS: Record<TaskType, string> = {
   social: "Rede social",
 };
 
-export function TaskForm({
-  onCreated,
-}: {
-  onCreated: () => Promise<void>;
-}) {
+type FormField = {
+  key: string;
+  label: string;
+  type: FieldType;
+  required: boolean;
+};
+
+export function TaskForm({ onCreated }: { onCreated: () => Promise<void> }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<TaskType>("checkin");
@@ -27,17 +32,59 @@ export function TaskForm({
     useState<ConfirmationType>("automatic");
   const [points, setPoints] = useState(10);
   const [qrSecret, setQrSecret] = useState("");
+  const [fields, setFields] = useState<FormField[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  function addField() {
+    setFields((prev) => [
+      ...prev,
+      {
+        key: `campo_${Date.now()}_${prev.length}`,
+        label: "",
+        type: "text",
+        required: false,
+      },
+    ]);
+  }
+
+  function updateField(index: number, patch: Partial<FormField>) {
+    setFields((prev) =>
+      prev.map((f, i) => (i === index ? { ...f, ...patch } : f)),
+    );
+  }
+
+  function removeField(index: number) {
+    setFields((prev) => prev.filter((_, i) => i !== index));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (type === "form") {
+      const validFields = fields.filter((f) => f.label.trim() !== "");
+      if (validFields.length === 0) {
+        setError("Adicione ao menos um campo ao formulário.");
+        return;
+      }
+    }
+
     setLoading(true);
 
     const config: Record<string, unknown> = {};
     if (confirmation === "qr_code") {
       config.qr = qrSecret.trim();
+    }
+    if (type === "form") {
+      config.fields = fields
+        .filter((f) => f.label.trim() !== "")
+        .map((f) => ({
+          key: f.key,
+          label: f.label.trim(),
+          type: f.type,
+          required: f.required,
+        }));
     }
 
     const res = await fetch("/api/admin/tasks/create", {
@@ -66,6 +113,7 @@ export function TaskForm({
     setConfirmation("automatic");
     setPoints(10);
     setQrSecret("");
+    setFields([]);
     await onCreated();
     setLoading(false);
   }
@@ -163,6 +211,94 @@ export function TaskForm({
           </FieldGroup>
         )}
       </div>
+
+      {/* ===== Editor de campos do formulário ===== */}
+      {type === "form" && (
+        <div className="mt-5 rounded-lg border border-border bg-muted/20 p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Campos do formulário</h3>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addField}
+            >
+              <Plus className="size-4" /> Adicionar campo
+            </Button>
+          </div>
+
+          {fields.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Nenhum campo adicionado. Clique em "Adicionar campo" para criar
+              perguntas de texto ou checkbox.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {fields.map((field, index) => (
+                <li
+                  key={field.key}
+                  className="flex flex-col gap-2 rounded-lg border border-border bg-card p-3 sm:flex-row sm:items-center"
+                >
+                  <Input
+                    value={field.label}
+                    onChange={(e) =>
+                      updateField(index, { label: e.target.value })
+                    }
+                    placeholder="Pergunta / rótulo do campo"
+                    className="h-9 flex-1 rounded-lg border-border bg-background px-3"
+                  />
+
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={field.type}
+                      onChange={(e) =>
+                        updateField(index, {
+                          type: e.target.value as FieldType,
+                        })
+                      }
+                      className="h-9 rounded-lg border-border bg-background px-2 text-sm"
+                    >
+                      <option value="text">Texto</option>
+                      <option value="checkbox">Checkbox</option>
+                    </select>
+
+                    <label className="flex cursor-pointer items-center gap-1.5 text-sm text-muted-foreground">
+                      <input
+                        type="checkbox"
+                        checked={field.required}
+                        onChange={(e) =>
+                          updateField(index, { required: e.target.checked })
+                        }
+                        className="size-4 accent-primary"
+                      />
+                      Obrigatório
+                    </label>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeField(index)}
+                      aria-label="Remover campo"
+                    >
+                      <Trash2 className="size-4 text-destructive" />
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1">
+              <Type className="size-3.5" /> Texto: resposta livre digitada
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <CheckSquare className="size-3.5" /> Checkbox: marcar sim/não
+            </span>
+          </div>
+        </div>
+      )}
 
       {error && (
         <p className="mt-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
