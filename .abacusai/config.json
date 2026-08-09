@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /Users/brunomulim/Documents/PROJETOS/evento-gamificacao/.abacusai/temp && file *.png *.jpeg *.svg 2>/dev/null && echo…)",
+      "Bash(cd /Users/brunomulim/Documents/PROJETOS/evento-gamificacao/.abacusai/temp && cp 45f5662d-7b4c-4747-8bb9-d0ad1b9a00f1.png…)"
+    ]
+  }
+}

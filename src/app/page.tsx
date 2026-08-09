@@ -1,111 +1,253 @@
 import Image from "next/image";
 import Link from "next/link";
 import { PixelImage } from "@/components/ui/pixel-image";
+import {
+  QrCode,
+  Trophy,
+  Zap,
+  Users,
+  ArrowRight,
+  Dumbbell,
+  Timer,
+} from "lucide-react";
+
+const PRODUTOS = [
+  {
+    nome: "Whey Protein",
+    desc: "Recuperação muscular pós-treino",
+    badge: "Proteína",
+  },
+  {
+    nome: "Creatina",
+    desc: "Força e performance nos treinos",
+    badge: "Força",
+  },
+  {
+    nome: "Pré-Treino",
+    desc: "Energia para treinar mais pesado",
+    badge: "Energia",
+  },
+  {
+    nome: "BCAA",
+    desc: "Suporte durante o treino",
+    badge: "Recuperação",
+  },
+];
+
+const BENEFICIOS = [
+  {
+    icon: QrCode,
+    titulo: "Check-in com QR Code",
+    desc: "Escaneie, complete tarefas e ganhe pontos na hora.",
+  },
+  {
+    icon: Trophy,
+    titulo: "Ranking ao vivo",
+    desc: "Acompanhe sua posição em tempo real e suba no pódio.",
+  },
+  {
+    icon: Zap,
+    titulo: "Pontos por tarefas",
+    desc: "Check-ins, formulários e posts sociais valem pontos.",
+  },
+  {
+    icon: Users,
+    titulo: "Prêmios por colocação",
+    desc: "Os melhores colocados levam kits exclusivos JM.",
+  },
+];
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center gap-8 sm:gap-10">
-      <section className="w-full bg-primary px-4 py-12 text-center sm:px-8 sm:py-20 md:py-28">
-        <h1 className="font-goldman text-4xl font-bold tracking-tight text-primary-foreground uppercase sm:text-5xl md:text-6xl">
-          Titulo do evento
-        </h1>
-        <p className="mt-3 text-base text-primary-foreground/80 sm:text-lg">
-          Breve descrição do evento
-        </p>
+    <main className="flex min-h-screen flex-col items-center">
+      {/* ===== HERO ===== */}
+      <section className="tech-grid-bg relative w-full overflow-hidden border-b border-border">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(60,113,200,0.18),transparent_60%)]" />
+        <div className="relative mx-auto flex max-w-5xl flex-col items-center px-4 py-14 text-center sm:py-20 md:py-24">
+          <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary uppercase tracking-widest">
+            <Dumbbell className="size-3.5" />
+            Ativação de Suplementos · Edição 2026
+          </span>
+          <h1 className="font-goldman text-4xl font-bold tracking-tight text-primary uppercase glow-gold sm:text-5xl md:text-6xl">
+            Desafio
+            <br className="sm:hidden" />
+            <span className="text-foreground"> JM Fitness</span>
+          </h1>
+          <p className="mt-4 max-w-2xl text-base text-muted-foreground sm:text-lg">
+            Participe do desafio gamificado de ativação do novo suplemento.
+            Complete tarefas, acumule pontos, dispute o ranking e concorra a
+            prêmios exclusivos.
+          </p>
+
+          <div className="mt-8 flex w-full flex-col gap-3 px-4 sm:w-auto sm:flex-row sm:gap-4">
+            <Link
+              href="/participant/cadastro"
+              className="group inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-8 py-4 text-center text-lg font-bold text-primary-foreground uppercase shadow-[0_0_24px_rgba(188,156,37,0.35)] transition-all hover:bg-primary/90"
+            >
+              Inscreva-se
+              <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link
+              href="/participant/login"
+              className="inline-flex items-center justify-center rounded-xl border-2 border-foreground/20 px-8 py-4 text-center text-lg font-bold text-foreground uppercase transition-colors hover:border-primary hover:text-primary"
+            >
+              Entrar
+            </Link>
+          </div>
+
+          <div className="mt-8 flex items-center gap-6 text-sm text-muted-foreground sm:gap-10">
+            <span className="flex items-center gap-1.5">
+              <Zap className="size-4 text-primary" /> +180 pontos possíveis
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Trophy className="size-4 text-primary" /> Prêmios reais
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Timer className="size-4 text-primary" /> Tempo real
+            </span>
+          </div>
+        </div>
       </section>
 
-      <div className="flex w-full max-w-md items-center justify-center gap-8 px-4 sm:w-[60%] sm:justify-between">
-        <Image
-          src="/logos/jm_512x512.webp"
-          width={200}
-          height={200}
-          alt={"JM Juliana Martins Fitness Studio Logo"}
-          className="h-20 w-20 object-contain sm:h-32 sm:w-32 md:h-50 md:w-50"
-        />
-        <Image
-          src="/logos/logo-alphabox.jpeg"
-          width={200}
-          height={200}
-          alt={"Alphabox Logo"}
-          className="h-20 w-20 object-contain sm:h-32 sm:w-32 md:h-50 md:w-50"
-        />
-      </div>
+      {/* ===== LOGOS PARCEIROS ===== */}
+      <section className="mx-auto w-full max-w-5xl px-4 py-10 sm:py-14">
+        <p className="mb-6 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          Realização e apoio
+        </p>
+        <div className="flex items-center justify-center gap-8 sm:gap-16">
+          <Image
+            src="/logos/jm_512x512.webp"
+            width={200}
+            height={200}
+            alt="JM Juliana Martins Fitness Studio Logo"
+            className="h-20 w-20 object-contain sm:h-32 sm:w-32"
+          />
+          <Image
+            src="/logos/logo-alphabox.jpeg"
+            width={200}
+            height={200}
+            alt="Alphabox Logo"
+            className="h-20 w-20 object-contain sm:h-32 sm:w-32"
+          />
+        </div>
+      </section>
 
-      <div className="overflow-hidden rounded-2xl border-4 border-primary">
-        <PixelImage
-          src="/images/promo-event.jpeg"
-          customGrid={{ rows: 4, cols: 6 }}
-          grayscaleAnimation
-        />
-      </div>
+      {/* ===== IMAGEM PROMO ===== */}
+      <section className="mx-auto w-full max-w-5xl px-4 pb-10 sm:pb-14">
+        <div className="overflow-hidden rounded-2xl border border-border shadow-[0_0_40px_rgba(60,113,200,0.15)]">
+          <PixelImage
+            src="/images/promo-event.jpeg"
+            customGrid={{ rows: 4, cols: 6 }}
+            grayscaleAnimation
+          />
+        </div>
+      </section>
 
-      <div className="flex w-full max-w-2xl flex-col items-center gap-3 px-4 sm:w-[80%] md:w-[65%]">
-        <span className="h-1.5 w-16 rounded-full bg-primary" />
-        <p className="font-heading text-sm font-bold tracking-widest text-primary uppercase">
-          Descrição detalhada do evento...
-        </p>
-        <p className="text-center text-sm leading-relaxed text-foreground/80 sm:text-base">
-          lorem ipsum dolor sit amet Lorem ipsum dolor sit amet consectetur
-          adipisicing elit. Nemo itaque, quisquam excepturi veniam dignissimos
-          sit. Earum a, praesentium maxime aliquam adipisci cumque facere
-          facilis accusamus necessitatibus, laudantium iste dignissimos
-          reiciendis. Quia quis ea quidem facere neque architecto inventore quos
-          ad explicabo nemo! Repellendus nesciunt, incidunt sunt eveniet iste
-          impedit dolores natus non quia, ab, doloremque nam placeat ad
-          consequatur exercitationem. Alias non, pariatur ipsum reiciendis sequi
-          corrupti omnis enim magni laudantium. Quos tempore eaque modi
-          assumenda, quaerat nihil blanditiis, nesciunt sed saepe porro
-          perferendis atque, commodi eveniet et repudiandae aliquam? Quaerat
-          maiores iure at similique necessitatibus suscipit, eius quod dolor,
-          cumque pariatur sint tempora. Officiis ut quas odit, dolores obcaecati
-          ex nisi, ipsam qui quidem officia vel facilis cupiditate similique?
-          Sapiente similique, deleniti accusantium id, facilis expedita enim
-          omnis error ipsam quam repudiandae, odit praesentium cumque velit
-          molestias fugit assumenda perferendis corrupti voluptas voluptate
-          reiciendis magni optio. Officiis, debitis nam.
-        </p>
-      </div>
+      {/* ===== SOBRE ===== */}
+      <section className="mx-auto w-full max-w-5xl px-4 py-10 sm:py-14">
+        <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-3 text-center">
+          <span className="h-1.5 w-16 rounded-full bg-primary" />
+          <p className="font-heading text-sm font-bold tracking-widest text-primary uppercase">
+            Sobre o desafio
+          </p>
+          <p className="text-center text-sm leading-relaxed text-foreground/80 sm:text-base">
+            Um evento de ativação do novo suplemento da JM Fitness: quanto mais
+            tarefas você completa — check-in, formulário de perfil, escaneamento
+            de QR codes nos estandes e posts nas redes sociais — mais pontos
+            acumula. No final, os participantes mais bem colocados no ranking
+            levam kits, camisetas e brindes exclusivos.
+          </p>
+        </div>
+      </section>
 
-      <div className="flex w-full flex-col gap-3 px-4 pb-12 sm:w-auto sm:flex-row sm:gap-4">
-        <Link
-          href="/cadastro"
-          className="w-full rounded-xl bg-primary px-6 py-4 text-center text-lg font-bold text-primary-foreground uppercase shadow-[4px_4px_0_0_#000] transition-colors hover:bg-primary/90 sm:w-auto sm:px-10 sm:py-6 sm:text-2xl"
-        >
-          Inscreva-se
-        </Link>
-        <Link
-          href="/login"
-          className="w-full rounded-xl border-2 border-foreground px-6 py-4 text-center text-lg font-bold text-foreground uppercase transition-colors hover:bg-foreground hover:text-background sm:w-auto sm:px-10 sm:py-6 sm:text-2xl"
-        >
-          Entrar
-        </Link>
-      </div>
-      <div className="flex w-full max-w-2xl flex-col items-center gap-3 px-4 sm:w-[80%] md:w-[65%]">
-        <span className="h-1.5 w-16 rounded-full bg-primary" />
-        <p className="font-heading text-sm font-bold tracking-widest text-primary uppercase">
-          Descrição detalhada do evento...
+      {/* ===== COMO FUNCIONA ===== */}
+      <section className="w-full border-y border-border bg-card/40">
+        <div className="mx-auto grid max-w-5xl gap-6 px-4 py-12 sm:grid-cols-2 sm:py-16 lg:grid-cols-4">
+          {BENEFICIOS.map((b) => {
+            const Icon = b.icon;
+            return (
+              <div
+                key={b.titulo}
+                className="rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/50"
+              >
+                <div className="mb-3 flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Icon className="size-5" />
+                </div>
+                <h3 className="font-semibold">{b.titulo}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{b.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ===== PRODUTOS (placeholders) ===== */}
+      <section className="mx-auto w-full max-w-5xl px-4 py-12 sm:py-16">
+        <div className="mb-8 text-center">
+          <span className="mb-3 inline-block h-1.5 w-16 rounded-full bg-primary" />
+          <h2 className="font-goldman text-2xl font-bold uppercase text-primary glow-gold sm:text-3xl">
+            Conheça a linha
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Placeholders de produtos — os campeões levam esses kits.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {PRODUTOS.map((p) => (
+            <div
+              key={p.nome}
+              className="group overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/50"
+            >
+              <div className="relative flex aspect-square items-center justify-center bg-gradient-to-br from-[#070a23] to-[#101740]">
+                <Dumbbell className="size-12 text-accent/60 transition-transform group-hover:scale-110" />
+                <span className="absolute left-2 top-2 rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+                  {p.badge}
+                </span>
+                <div className="absolute bottom-2 right-2 rounded bg-background/60 px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                  imagem
+                </div>
+              </div>
+              <div className="p-3">
+                <h3 className="text-sm font-semibold">{p.nome}</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">{p.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ===== CTA FINAL ===== */}
+      <section className="w-full border-t border-border bg-gradient-to-b from-card/60 to-transparent">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-3 px-4 py-14 text-center sm:py-16">
+          <h2 className="font-goldman text-3xl font-bold uppercase text-primary glow-gold sm:text-4xl">
+            Pronto para o desafio?
+          </h2>
+          <p className="max-w-xl text-sm text-muted-foreground sm:text-base">
+            Inscreva-se agora e comece a acumular pontos. O ranking já está
+            aberto!
+          </p>
+          <div className="mt-4 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:gap-4">
+            <Link
+              href="/participant/cadastro"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-8 py-4 text-center text-lg font-bold text-primary-foreground uppercase shadow-[0_0_24px_rgba(188,156,37,0.35)] transition-colors hover:bg-primary/90"
+            >
+              Quero participar
+            </Link>
+            <Link
+              href="/admin/login"
+              className="inline-flex items-center justify-center rounded-xl border border-border px-8 py-4 text-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Área do administrador
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <footer className="w-full border-t border-border py-6">
+        <p className="text-center text-xs text-muted-foreground">
+          © 2026 JM Fitness Studio · Desafio de ativação de suplementos
         </p>
-        <p className="text-center text-sm leading-relaxed text-foreground/80 sm:text-base">
-          lorem ipsum dolor sit amet Lorem ipsum dolor sit amet consectetur
-          adipisicing elit. Nemo itaque, quisquam excepturi veniam dignissimos
-          sit. Earum a, praesentium maxime aliquam adipisci cumque facere
-          facilis accusamus necessitatibus, laudantium iste dignissimos
-          reiciendis. Quia quis ea quidem facere neque architecto inventore quos
-          ad explicabo nemo! Repellendus nesciunt, incidunt sunt eveniet iste
-          impedit dolores natus non quia, ab, doloremque nam placeat ad
-          consequatur exercitationem. Alias non, pariatur ipsum reiciendis sequi
-          corrupti omnis enim magni laudantium. Quos tempore eaque modi
-          assumenda, quaerat nihil blanditiis, nesciunt sed saepe porro
-          perferendis atque, commodi eveniet et repudiandae aliquam? Quaerat
-          maiores iure at similique necessitatibus suscipit, eius quod dolor,
-          cumque pariatur sint tempora. Officiis ut quas odit, dolores obcaecati
-          ex nisi, ipsam qui quidem officia vel facilis cupiditate similique?
-          Sapiente similique, deleniti accusantium id, facilis expedita enim
-          omnis error ipsam quam repudiandae, odit praesentium cumque velit
-          molestias fugit assumenda perferendis corrupti voluptas voluptate
-          reiciendis magni optio. Officiis, debitis nam.
-        </p>
-      </div>
+      </footer>
     </main>
   );
 }
