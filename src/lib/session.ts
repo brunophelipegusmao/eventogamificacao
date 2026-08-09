@@ -10,8 +10,8 @@ export const getSession = cache(async () => {
 });
 
 export type SessionUser = NonNullable<
-  Awaited<ReturnType<typeof getSession>>["user"]
->;
+  Awaited<ReturnType<typeof getSession>>
+>["user"];
 
 /** Retorna a sessão ou redireciona para o login da rota correta */
 export async function requireSession(role: "admin" | "participant") {

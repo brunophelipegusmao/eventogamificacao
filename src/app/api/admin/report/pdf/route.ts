@@ -279,7 +279,7 @@ export async function GET() {
   doc.end();
   const buffer = await done;
 
-  return new Response(buffer, {
+  return new Response(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": 'attachment; filename="relatorio-evento-jm.pdf"',

@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { db } from "./index";
 import { authAccount, authUser, task, prize, event } from "./schema";
-import { hashPassword } from "@better-auth/utils/password";
+import { hashPassword } from "better-auth/crypto";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { EVENT_ID } from "../lib/event";

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireApiSession } from "@/lib/api-auth";
 import { db } from "@/db";
 import { authUser, completion, task } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 
 export const dynamic = "force-dynamic";
@@ -51,8 +51,12 @@ export async function POST(request: Request) {
   const [existing] = await db
     .select()
     .from(completion)
-    .where(eq(completion.taskId, taskId))
-    .where(eq(completion.userId, auth.session.user.id))
+    .where(
+      and(
+        eq(completion.taskId, taskId),
+        eq(completion.userId, auth.session.user.id)
+      )
+    )
     .limit(1);
 
   if (existing) {

@@ -47,6 +47,7 @@ export function ParticipantTasksView() {
     Record<string, Record<string, string | boolean>>
   >({});
   const [qrInput, setQrInput] = useState<Record<string, string>>({});
+  const [adminProof, setAdminProof] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<{
     id: string;
     text: string;
@@ -91,7 +92,7 @@ export function ParticipantTasksView() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         taskId: task.id,
-        payload: { print: formData[task.id] ?? {} },
+        payload: { print: adminProof[task.id] ?? "" },
       }),
     });
     const data = await res.json();
@@ -245,15 +246,15 @@ export function ParticipantTasksView() {
       <div className="space-y-3">
         <Input
           placeholder="Cole o link/print do comprovante"
-          value={formData[task.id] ?? ""}
+          value={adminProof[task.id] ?? ""}
           onChange={(e) =>
-            setFormData((prev) => ({ ...prev, [task.id]: e.target.value }))
+            setAdminProof((prev) => ({ ...prev, [task.id]: e.target.value }))
           }
           className="h-10 w-full max-w-xs rounded-lg border-border bg-background px-3"
         />
         <Button
           size="sm"
-          disabled={busyId === task.id || !formData[task.id]}
+          disabled={busyId === task.id || !adminProof[task.id]}
           onClick={() => submitForAdmin(task)}
         >
           <Send className="size-4" /> Enviar para confirmação
