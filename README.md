@@ -29,8 +29,29 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Deploy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+A aplicação roda em produção numa VPS própria (Docker + Nginx + Postgres nativo),
+em `gameficacao.brunogusmao.dev`. Não há deploy na Vercel.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Setup inicial da VPS (uma única vez, numa VPS Ubuntu/Debian limpa):**
+
+```bash
+LETSENCRYPT_EMAIL=seu@email.com ./scripts/vps-setup.sh
+```
+
+Instala Docker, PostgreSQL nativo, Nginx e certbot; cria o banco/role de produção;
+configura o subdomínio com SSL; clona o repo e gera `.env.production` a partir de
+`.env.production.example`. Ao final, preencha manualmente as credenciais do Google
+OAuth e do admin inicial em `.env.production`.
+
+**A cada novo deploy:**
+
+```bash
+cd ~/apps/evento-gamificacao && ./scripts/deploy.sh
+```
+
+Puxa `main`, builda a imagem Docker, roda as migrations do Drizzle contra o Postgres
+do host, sobe o container e valida com um healthcheck. Veja
+[`scripts/deploy.sh`](scripts/deploy.sh) e [`scripts/vps-setup.sh`](scripts/vps-setup.sh)
+para os detalhes de cada etapa.

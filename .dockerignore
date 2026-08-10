@@ -1,0 +1,26 @@
+node_modules
+.next
+.git
+.gitignore
+
+# env reais nunca entram na imagem/contexto de build
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+docker-compose.yml
+docker-compose.prod.yml
+
+.vscode
+.kiro
+.gemini
+.abacusai
+.claude
+
+*.md
+!README.md
+
+coverage
+*.log
+.DS_Store

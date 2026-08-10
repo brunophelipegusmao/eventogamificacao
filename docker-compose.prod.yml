@@ -1,0 +1,45 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+    image: evento-gamificacao:latest
+    container_name: evento_gamificacao_app
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      # Só loopback: o Nginx do host é quem expõe isso ao público (80/443).
+      - "127.0.0.1:3300:3000"
+
+  # Serviço one-off para rodar as migrations do Drizzle. Reaproveita o
+  # estágio "builder" (tem devDependencies, incl. drizzle-kit) em vez de criar
+  # uma imagem separada. Disparado via `docker compose run --rm migrate`,
+  # nunca sobe sozinho com `up`.
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+    image: evento-gamificacao:builder
+    env_file:
+      - .env.production
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["pnpm", "db:migrate"]
+    profiles:
+      - tools
+
+networks:
+  default:
+    name: gamificacao_net
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
