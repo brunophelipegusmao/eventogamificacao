@@ -35,6 +35,8 @@ const BENEFICIOS = [
   },
 ];
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const { sponsorLogos, products, promoMedia } = await getSiteSettings();
 
