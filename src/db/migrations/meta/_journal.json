@@ -29,6 +29,27 @@
       "when": 1786312908716,
       "tag": "0003_friendly_sugar_man",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786649137566,
+      "tag": "0004_amazing_the_anarchist",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786821259339,
+      "tag": "0005_vengeful_junta",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786824320218,
+      "tag": "0006_small_black_queen",
+      "breakpoints": true
     }
   ]
 }

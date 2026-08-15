@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { PixelImage } from "@/components/ui/pixel-image";
+import { getSiteSettings } from "@/lib/site-settings";
 import {
   QrCode,
   Trophy,
@@ -10,29 +11,6 @@ import {
   Dumbbell,
   Timer,
 } from "lucide-react";
-
-const PRODUTOS = [
-  {
-    nome: "Whey Protein",
-    desc: "Recuperação muscular pós-treino",
-    badge: "Proteína",
-  },
-  {
-    nome: "Creatina",
-    desc: "Força e performance nos treinos",
-    badge: "Força",
-  },
-  {
-    nome: "Pré-Treino",
-    desc: "Energia para treinar mais pesado",
-    badge: "Energia",
-  },
-  {
-    nome: "BCAA",
-    desc: "Suporte durante o treino",
-    badge: "Recuperação",
-  },
-];
 
 const BENEFICIOS = [
   {
@@ -57,7 +35,9 @@ const BENEFICIOS = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const { sponsorLogos, products, promoMedia } = await getSiteSettings();
+
   return (
     <main className="flex min-h-screen flex-col items-center">
       {/* ===== HERO ===== */}
@@ -114,32 +94,43 @@ export default function Home() {
         <p className="mb-6 text-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
           Realização e apoio
         </p>
-        <div className="flex items-center justify-center gap-8 sm:gap-16">
-          <Image
-            src="/logos/jm_512x512.webp"
-            width={200}
-            height={200}
-            alt="JM Juliana Martins Fitness Studio Logo"
-            className="h-20 w-20 object-contain sm:h-32 sm:w-32"
-          />
-          <Image
-            src="/logos/logo-alphabox.jpeg"
-            width={200}
-            height={200}
-            alt="Alphabox Logo"
-            className="h-20 w-20 object-contain sm:h-32 sm:w-32"
-          />
+        <div className="flex flex-wrap justify-center gap-4">
+          {sponsorLogos.map((logo) => (
+            <div
+              key={logo}
+              className="relative aspect-square w-[calc(50%-0.5rem)] overflow-hidden rounded-xl border border-border bg-card p-6 lg:w-[calc(25%-0.75rem)]"
+            >
+              <Image
+                src={logo}
+                fill
+                alt="Logo de realização/apoio"
+                className="object-contain"
+              />
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* ===== IMAGEM PROMO ===== */}
+      {/* ===== MÍDIA PROMO ===== */}
       <section className="mx-auto w-full max-w-5xl px-4 pb-10 sm:pb-14">
-        <div className="overflow-hidden rounded-2xl border border-border shadow-[0_0_40px_rgba(60,113,200,0.15)]">
-          <PixelImage
-            src="/images/promo-event.jpeg"
-            customGrid={{ rows: 4, cols: 6 }}
-            grayscaleAnimation
-          />
+        <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-border shadow-[0_0_40px_rgba(60,113,200,0.15)]">
+          {promoMedia.type === "video" ? (
+            <video
+              src={promoMedia.url}
+              className="absolute inset-0 h-full w-full object-cover"
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
+          ) : (
+            <PixelImage
+              src={promoMedia.url}
+              customGrid={{ rows: 4, cols: 6 }}
+              grayscaleAnimation
+              className="absolute inset-0 h-full w-full"
+            />
+          )}
         </div>
       </section>
 
@@ -181,7 +172,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== PRODUTOS (placeholders) ===== */}
+      {/* ===== PRODUTOS ===== */}
       <section className="mx-auto w-full max-w-5xl px-4 py-12 sm:py-16">
         <div className="mb-8 text-center">
           <span className="mb-3 inline-block h-1.5 w-16 rounded-full bg-primary" />
@@ -193,26 +184,63 @@ export default function Home() {
           </p>
         </div>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {PRODUTOS.map((p) => (
-            <div
-              key={p.nome}
-              className="group overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/50"
-            >
-              <div className="relative flex aspect-square items-center justify-center bg-gradient-to-br from-[#070a23] to-[#101740]">
-                <Dumbbell className="size-12 text-accent/60 transition-transform group-hover:scale-110" />
-                <span className="absolute left-2 top-2 rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
-                  {p.badge}
-                </span>
-                <div className="absolute bottom-2 right-2 rounded bg-background/60 px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                  imagem
+          {products.map((p, index) => {
+            const cardClassName =
+              "group overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/50";
+
+            const content = (
+              <>
+                <div className="relative flex aspect-square items-center justify-center bg-gradient-to-br from-[#070a23] to-[#101740]">
+                  {p.imageUrl ? (
+                    <Image
+                      src={p.imageUrl}
+                      fill
+                      alt={p.name}
+                      className="object-cover"
+                    />
+                  ) : (
+                    <>
+                      <Dumbbell className="size-12 text-accent/60 transition-transform group-hover:scale-110" />
+                      <div className="absolute bottom-2 right-2 rounded bg-background/60 px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        imagem
+                      </div>
+                    </>
+                  )}
+                  {p.tag && (
+                    <span className="absolute left-2 top-2 rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+                      {p.tag}
+                    </span>
+                  )}
                 </div>
+                <div className="p-3">
+                  <h3 className="text-sm font-semibold">{p.name}</h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {p.description}
+                  </p>
+                </div>
+              </>
+            );
+
+            if (p.link) {
+              return (
+                <Link
+                  key={`${p.name}-${index}`}
+                  href={p.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cardClassName}
+                >
+                  {content}
+                </Link>
+              );
+            }
+
+            return (
+              <div key={`${p.name}-${index}`} className={cardClassName}>
+                {content}
               </div>
-              <div className="p-3">
-                <h3 className="text-sm font-semibold">{p.nome}</h3>
-                <p className="mt-0.5 text-xs text-muted-foreground">{p.desc}</p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

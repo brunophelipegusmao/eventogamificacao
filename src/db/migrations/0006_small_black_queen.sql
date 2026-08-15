@@ -1,0 +1,1 @@
+ALTER TABLE "site_settings" ADD COLUMN "promo_media" jsonb DEFAULT '{"type":"image","url":"/images/promo-event.jpeg"}'::jsonb NOT NULL;

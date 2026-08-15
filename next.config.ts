@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(process.cwd()),
   reactCompiler: true,
   allowedDevOrigins: ["192.168.18.10"],
+  images: {
+    // Logos de apoiadores/realizadores são cadastrados por admins com URL
+    // livre, podendo apontar para hosts externos.
+    remotePatterns: [{ protocol: "https", hostname: "**" }],
+  },
   outputFileTracingIncludes: {
     "/api/admin/report/pdf": ["./node_modules/pdfkit/js/data/**"],
   },

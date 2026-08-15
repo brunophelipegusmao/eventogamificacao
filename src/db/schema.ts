@@ -213,6 +213,73 @@ export const event = pgTable("event", {
 });
 
 /* ============================================================
+ * CONFIGURAÇÕES DO SITE (linha singleton)
+ * ============================================================ */
+
+export type SponsorProduct = {
+  name: string;
+  description: string;
+  tag: string;
+  imageUrl: string;
+  link: string;
+};
+
+export type PromoMedia = {
+  type: "image" | "video";
+  url: string;
+};
+
+export const siteSettings = pgTable("site_settings", {
+  id: text("id").primaryKey(),
+  /** URLs das logos de realização/apoio exibidas na home (1 a 6 imagens) */
+  sponsorLogos: jsonb("sponsor_logos")
+    .$type<string[]>()
+    .notNull()
+    .default(["/logos/jm_512x512.webp"]),
+  /** Produtos exibidos em "Conheça a linha" (1 a 6 produtos) */
+  products: jsonb("products")
+    .$type<SponsorProduct[]>()
+    .notNull()
+    .default([
+      {
+        name: "Whey Protein",
+        description: "Recuperação muscular pós-treino",
+        tag: "Proteína",
+        imageUrl: "",
+        link: "",
+      },
+      {
+        name: "Creatina",
+        description: "Força e performance nos treinos",
+        tag: "Força",
+        imageUrl: "",
+        link: "",
+      },
+      {
+        name: "Pré-Treino",
+        description: "Energia para treinar mais pesado",
+        tag: "Energia",
+        imageUrl: "",
+        link: "",
+      },
+      {
+        name: "BCAA",
+        description: "Suporte durante o treino",
+        tag: "Recuperação",
+        imageUrl: "",
+        link: "",
+      },
+    ]),
+  /** Imagem ou vídeo de destaque exibido na home (formato 16:9) */
+  promoMedia: jsonb("promo_media")
+    .$type<PromoMedia>()
+    .notNull()
+    .default({ type: "image", url: "/images/promo-event.jpeg" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+/* ============================================================
  * VENCEDORES (snapshot final do ranking)
  * ============================================================ */
 

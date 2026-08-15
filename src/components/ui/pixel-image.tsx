@@ -27,6 +27,8 @@ interface PixelImageProps {
   pixelFadeInDuration?: number; // in ms
   maxAnimationDelay?: number; // in ms
   colorRevealDelay?: number; // in ms
+  /** Substitui as classes de tamanho padrão (ex.: "absolute inset-0 h-full w-full" para preencher o container do chamador). */
+  className?: string;
 }
 
 export const PixelImage = ({
@@ -37,6 +39,7 @@ export const PixelImage = ({
   maxAnimationDelay = 1200,
   colorRevealDelay = 1300,
   customGrid,
+  className,
 }: PixelImageProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [showColor, setShowColor] = useState(false);
@@ -101,7 +104,12 @@ export const PixelImage = ({
   }, [rows, cols]);
 
   return (
-    <div className="relative h-56 w-56 select-none sm:h-80 sm:w-80 md:h-90 md:w-90 lg:h-96 lg:w-96">
+    <div
+      className={cn(
+        "relative select-none",
+        className ?? "h-56 w-56 sm:h-80 sm:w-80 md:h-90 md:w-90 lg:h-96 lg:w-96",
+      )}
+    >
       {pieces.map((piece, index) => (
         <div
           key={index}
@@ -119,7 +127,7 @@ export const PixelImage = ({
             src={src}
             alt={`Pixel image piece ${index + 1}`}
             className={cn(
-              "z-1 rounded-[2.5rem] object-cover",
+              "absolute inset-0 z-1 h-full w-full rounded-[2.5rem] object-cover",
               grayscaleAnimation && (showColor ? "grayscale-0" : "grayscale"),
             )}
             style={{
