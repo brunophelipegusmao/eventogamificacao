@@ -32,7 +32,10 @@ log "Buildando imagens (app + migrate)"
 "${COMPOSE[@]}" build
 
 log "Rodando migrations do banco"
-"${COMPOSE[@]}" run --rm migrate
+# --build: o serviço migrate fica atrás de `profiles: [tools]`, então o
+# `compose build` acima (sem --profile) pula ele e reaproveitaria uma imagem
+# `:builder` desatualizada sem as migrations mais recentes.
+"${COMPOSE[@]}" run --build --rm migrate
 
 log "Subindo a aplicação"
 "${COMPOSE[@]}" up -d app
