@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { QrCode } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { TaskForm } from "@/components/admin/task-form";
 import { Button } from "@/components/ui/button";
@@ -113,13 +115,27 @@ export function AdminTasksView() {
                     {t.points} pts
                   </p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => toggleStatus(t)}
-                >
-                  {t.status === "active" ? "Desativar" : "Ativar"}
-                </Button>
+                <div className="flex shrink-0 gap-2">
+                  {t.confirmation === "qr_code" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      nativeButton={false}
+                      render={
+                        <Link href={`/admin/tarefas/${t.id}/qr`} target="_blank" />
+                      }
+                    >
+                      <QrCode className="size-4" /> Ver QR
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => toggleStatus(t)}
+                  >
+                    {t.status === "active" ? "Desativar" : "Ativar"}
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>

@@ -5,6 +5,7 @@ import { CheckCircle2, Clock, QrCode, Send, Trophy } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FieldLabel } from "@/components/ui/field";
+import { QrScanner } from "@/components/participant/qr-scanner";
 import { cn } from "@/lib/utils";
 
 type Completion = {
@@ -47,6 +48,7 @@ export function ParticipantTasksView() {
     Record<string, Record<string, string | boolean>>
   >({});
   const [qrInput, setQrInput] = useState<Record<string, string>>({});
+  const [scanningId, setScanningId] = useState<string | null>(null);
   const [adminProof, setAdminProof] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<{
     id: string;
@@ -105,13 +107,16 @@ export function ParticipantTasksView() {
     if (res.ok) load();
   }
 
-  async function submitQr(task: TaskItem) {
+  async function submitQr(task: TaskItem, qrValue?: string) {
     setBusyId(task.id);
     setMessage(null);
     const res = await fetch("/api/participant/qr", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ taskId: task.id, qr: qrInput[task.id] ?? "" }),
+      body: JSON.stringify({
+        taskId: task.id,
+        qr: qrValue ?? qrInput[task.id] ?? "",
+      }),
     });
     const data = await res.json();
     setBusyId(null);
@@ -220,10 +225,31 @@ export function ParticipantTasksView() {
     }
 
     if (task.confirmation === "qr_code") {
+      if (scanningId === task.id) {
+        return (
+          <QrScanner
+            onDecode={(text) => {
+              setScanningId(null);
+              setQrInput((prev) => ({ ...prev, [task.id]: text }));
+              submitQr(task, text);
+            }}
+            onClose={() => setScanningId(null)}
+          />
+        );
+      }
+
       return (
         <div className="space-y-3">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={busyId === task.id}
+            onClick={() => setScanningId(task.id)}
+          >
+            <QrCode className="size-4" /> Escanear QR
+          </Button>
           <Input
-            placeholder="Digite ou escaneie o código do QR"
+            placeholder="Ou digite o código do QR"
             value={qrInput[task.id] ?? ""}
             onChange={(e) =>
               setQrInput((prev) => ({ ...prev, [task.id]: e.target.value }))

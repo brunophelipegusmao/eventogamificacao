@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { PixelImage } from "@/components/ui/pixel-image";
+import { PromoVideo } from "@/app/components/promo-video";
 import { getSiteSettings } from "@/lib/site-settings";
 import {
   QrCode,
@@ -117,14 +118,7 @@ export default async function Home() {
       <section className="mx-auto w-full max-w-5xl px-4 pb-10 sm:pb-14">
         <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-border shadow-[0_0_40px_rgba(60,113,200,0.15)]">
           {promoMedia.type === "video" ? (
-            <video
-              src={promoMedia.url}
-              className="absolute inset-0 h-full w-full object-cover"
-              autoPlay
-              loop
-              muted
-              playsInline
-            />
+            <PromoVideo src={promoMedia.url} />
           ) : (
             <PixelImage
               src={promoMedia.url}
