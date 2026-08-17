@@ -138,11 +138,12 @@ export default async function Home() {
             Sobre o desafio
           </p>
           <p className="text-center text-sm leading-relaxed text-foreground/80 sm:text-base">
-            Um evento de ativação do novo suplemento da JM Fitness: quanto mais
-            tarefas você completa — check-in, formulário de perfil, escaneamento
-            de QR codes nos estandes e posts nas redes sociais — mais pontos
-            acumula. No final, os participantes mais bem colocados no ranking
-            levam kits, camisetas e brindes exclusivos.
+            Um game para potencializar os seus resultados de forma motivadora e
+            enérgica com os produtos SouFit aceleradores de resultado: quanto
+            mais tarefas você completa — check-in, formulário de perfil,
+            escaneamento de QR codes nos estandes e posts nas redes sociais —
+            mais pontos acumula. No final, os participantes mais bem colocados
+            no ranking levam kits e brindes exclusivos.
           </p>
         </div>
       </section>
