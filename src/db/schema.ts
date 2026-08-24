@@ -1,5 +1,7 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  date,
   index,
   integer,
   jsonb,
@@ -8,7 +10,6 @@ import {
   text,
   timestamp,
   uniqueIndex,
-  varchar,
 } from "drizzle-orm/pg-core";
 
 /* ============================================================
@@ -168,14 +169,43 @@ export const completion = pgTable(
     /** Nota/campo do admin ao aprovar ou rejeitar */
     adminNote: text("admin_note"),
     pointsAwarded: integer("points_awarded").notNull().default(0),
+    /** Dia (AAAA-MM-DD) do check-in, apenas para tarefas do tipo "checkin" — permite uma conclusão por dia. Nulo para tarefas de conclusão única. */
+    day: date("day"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (t) => [
-    uniqueIndex("completion_task_user_unique").on(t.taskId, t.userId),
+    uniqueIndex("completion_task_user_unique")
+      .on(t.taskId, t.userId)
+      .where(sql`${t.day} IS NULL`),
+    uniqueIndex("completion_task_user_day_unique")
+      .on(t.taskId, t.userId, t.day)
+      .where(sql`${t.day} IS NOT NULL`),
     index("completion_user_idx").on(t.userId),
     index("completion_status_idx").on(t.status),
   ],
+);
+
+/* ============================================================
+ * AJUSTES MANUAIS DE PONTOS (correções feitas por admins)
+ * ============================================================ */
+
+export const pointAdjustment = pgTable(
+  "point_adjustment",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => authUser.id, { onDelete: "cascade" }),
+    adminId: text("admin_id")
+      .notNull()
+      .references(() => authUser.id, { onDelete: "cascade" }),
+    /** Delta aplicado a totalPoints; positivo ou negativo, nunca zero */
+    points: integer("points").notNull(),
+    reason: text("reason").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("point_adjustment_user_idx").on(t.userId)],
 );
 
 /* ============================================================
@@ -275,6 +305,8 @@ export const siteSettings = pgTable("site_settings", {
     .$type<PromoMedia>()
     .notNull()
     .default({ type: "image", url: "/images/promo-event.jpeg" }),
+  /** Ícone salvo na tela inicial ao instalar o PWA (ideal 512x512, quadrado) */
+  pwaIconUrl: text("pwa_icon_url").notNull().default("/logos/jm_512x512.webp"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -301,5 +333,27 @@ export const winner = pgTable(
   (t) => [
     index("winner_rank_idx").on(t.rank),
     index("winner_user_idx").on(t.userId),
+  ],
+);
+
+/* ============================================================
+ * INSCRIÇÕES DE NOTIFICAÇÃO PUSH (por dispositivo/navegador)
+ * ============================================================ */
+
+export const pushSubscription = pgTable(
+  "push_subscription",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => authUser.id, { onDelete: "cascade" }),
+    endpoint: text("endpoint").notNull(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("push_subscription_endpoint_unique").on(t.endpoint),
+    index("push_subscription_user_idx").on(t.userId),
   ],
 );

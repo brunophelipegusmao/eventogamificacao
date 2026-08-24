@@ -1,9 +1,13 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Nunito_Sans, Roboto } from "next/font/google";
 import "./globals.css";
+import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { cn } from "@/lib/utils";
 
-const robotoHeading = Roboto({ subsets: ["latin"], variable: "--font-heading" });
+const robotoHeading = Roboto({
+  subsets: ["latin"],
+  variable: "--font-heading",
+});
 
 const nunitoSans = Nunito_Sans({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -21,6 +25,16 @@ export const metadata: Metadata = {
   title: "Desafio JM Fitness | Gamificação",
   description:
     "Participe do desafio gamificado de ativação do suplemento JM Fitness. Complete tarefas, acumule pontos e concorra a prêmios!",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "JM Fitness",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#070a23",
 };
 
 export default function RootLayout({
@@ -38,7 +52,7 @@ export default function RootLayout({
         geistMono.variable,
         "font-sans",
         nunitoSans.variable,
-        robotoHeading.variable
+        robotoHeading.variable,
       )}
     >
       <head>
@@ -49,7 +63,10 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <RegisterServiceWorker />
+        {children}
+      </body>
     </html>
   );
 }

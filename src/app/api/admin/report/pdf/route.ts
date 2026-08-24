@@ -1,14 +1,16 @@
-import { requireApiSession } from "@/lib/api-auth";
+import { asc, desc, eq } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import {
   authUser,
   completion,
   event,
+  pointAdjustment,
   prize,
   task,
   winner,
 } from "@/db/schema";
-import { asc, desc, eq } from "drizzle-orm";
+import { requireApiSession } from "@/lib/api-auth";
 import { EVENT_ID } from "@/lib/event";
 import "@/lib/pdf";
 import PDFDocument from "pdfkit";
@@ -19,7 +21,10 @@ export async function GET() {
   const auth = await requireApiSession("admin");
   if (!auth.ok) return auth.response;
 
-  const [evt, participants, completions, tasks, prizes, winners] =
+  const adjustmentUser = alias(authUser, "adjustment_user");
+  const adjustmentAdmin = alias(authUser, "adjustment_admin");
+
+  const [evt, participants, completions, tasks, _prizes, winners, adjustments] =
     await Promise.all([
       db.select().from(event).where(eq(event.id, EVENT_ID)).limit(1),
       db
@@ -36,8 +41,30 @@ export async function GET() {
         .orderBy(desc(authUser.totalPoints)),
       db.select().from(completion),
       db.select().from(task),
-      db.select().from(prize).where(eq(prize.active, true)).orderBy(asc(prize.placement)),
+      db
+        .select()
+        .from(prize)
+        .where(eq(prize.active, true))
+        .orderBy(asc(prize.placement)),
       db.select().from(winner).orderBy(asc(winner.rank)),
+      db
+        .select({
+          points: pointAdjustment.points,
+          reason: pointAdjustment.reason,
+          createdAt: pointAdjustment.createdAt,
+          userName: adjustmentUser.name,
+          adminName: adjustmentAdmin.name,
+        })
+        .from(pointAdjustment)
+        .innerJoin(
+          adjustmentUser,
+          eq(adjustmentUser.id, pointAdjustment.userId),
+        )
+        .innerJoin(
+          adjustmentAdmin,
+          eq(adjustmentAdmin.id, pointAdjustment.adminId),
+        )
+        .orderBy(desc(pointAdjustment.createdAt)),
     ]);
 
   const eventRow = evt[0] ?? null;
@@ -88,17 +115,21 @@ export async function GET() {
         eventRow?.status === "closed" ? "Encerrado" : "Em andamento"
       }`,
       40,
-      76
+      76,
     );
 
   let y = 120;
 
   // ===== Resumo =====
-  doc.fillColor(DARK).fontSize(14).font("Helvetica-Bold").text("Resumo do evento", 40, y);
+  doc
+    .fillColor(DARK)
+    .fontSize(14)
+    .font("Helvetica-Bold")
+    .text("Resumo do evento", 40, y);
   y += 24;
   const totalPoints = participants.reduce(
     (acc, p) => acc + (p.totalPoints ?? 0),
-    0
+    0,
   );
   const approved = completions.filter((c) => c.status === "approved").length;
   const pending = completions.filter((c) => c.status === "pending").length;
@@ -120,7 +151,11 @@ export async function GET() {
   // ===== Vencedores =====
   if (winners.length > 0) {
     y += 10;
-    doc.fillColor(DARK).fontSize(14).font("Helvetica-Bold").text("Vencedores", 40, y);
+    doc
+      .fillColor(DARK)
+      .fontSize(14)
+      .font("Helvetica-Bold")
+      .text("Vencedores", 40, y);
     y += 24;
     doc.font("Helvetica").fontSize(10);
     for (const w of winners) {
@@ -135,7 +170,7 @@ export async function GET() {
         .text(
           `${user?.name ?? "Participante"} — ${w.prizeName ?? "Prêmio"} (${w.totalPoints} pts)`,
           100,
-          y
+          y,
         );
       y += 16;
     }
@@ -143,18 +178,18 @@ export async function GET() {
 
   // ===== Ranking =====
   y += 10;
-  doc.fillColor(DARK).fontSize(14).font("Helvetica-Bold").text("Ranking final", 40, y);
+  doc
+    .fillColor(DARK)
+    .fontSize(14)
+    .font("Helvetica-Bold")
+    .text("Ranking final", 40, y);
   y += 24;
   doc.font("Helvetica").fontSize(10);
   for (const p of ranking) {
     const w = winnerByUser.get(p.id);
     const prizeText = w ? ` — ${w.prizeName}` : "";
-    doc
-      .fillColor(GRAY)
-      .text(`${p.rank}º`, 40, y);
-    doc
-      .fillColor(DARK)
-      .text(`${p.name}${prizeText}`, 70, y);
+    doc.fillColor(GRAY).text(`${p.rank}º`, 40, y);
+    doc.fillColor(DARK).text(`${p.name}${prizeText}`, 70, y);
     doc
       .fillColor(BLUE)
       .text(`${p.totalPoints} pts`, 480, y, { width: 70, align: "right" });
@@ -187,13 +222,16 @@ export async function GET() {
           p.instagram ? ` · @${p.instagram}` : ""
         }`,
         40,
-        y
+        y,
       );
     y += 18;
 
     const acts = completions.filter((c) => c.userId === p.id);
     if (acts.length === 0) {
-      doc.fillColor(GRAY).fontSize(9).text("Nenhuma atividade registrada.", 40, y);
+      doc
+        .fillColor(GRAY)
+        .fontSize(9)
+        .text("Nenhuma atividade registrada.", 40, y);
       y += 14;
     } else {
       for (const c of acts) {
@@ -219,10 +257,10 @@ export async function GET() {
           .font("Helvetica")
           .text(
             `${statusLabel} · ${c.pointsAwarded} pts · ${new Date(
-              c.createdAt
+              c.createdAt,
             ).toLocaleString("pt-BR")}`,
             40,
-            y + 12
+            y + 12,
           );
         y += 26;
 
@@ -261,6 +299,44 @@ export async function GET() {
     }
   }
 
+  // ===== Ajustes manuais de pontos =====
+  if (adjustments.length > 0) {
+    if (y > 700) {
+      doc.addPage();
+      y = 40;
+    }
+    y += 10;
+    doc
+      .fillColor(DARK)
+      .fontSize(14)
+      .font("Helvetica-Bold")
+      .text("Ajustes manuais de pontos", 40, y);
+    y += 24;
+    doc.font("Helvetica").fontSize(9);
+    for (const adj of adjustments) {
+      if (y > 740) {
+        doc.addPage();
+        y = 40;
+      }
+      const sign = adj.points > 0 ? "+" : "";
+      doc
+        .fillColor(adj.points > 0 ? BLUE : "#c0392b")
+        .font("Helvetica-Bold")
+        .text(`${sign}${adj.points} pts`, 40, y, { width: 60 });
+      doc
+        .fillColor(DARK)
+        .font("Helvetica")
+        .text(
+          `${adj.userName} — ${adj.reason} (por ${adj.adminName}, ${new Date(
+            adj.createdAt,
+          ).toLocaleString("pt-BR")})`,
+          100,
+          y,
+        );
+      y += 16;
+    }
+  }
+
   // ===== Rodapé (adicionado a cada página conforme é criada) =====
   let pageCount = 0;
   doc.on("pageAdded", () => {
@@ -272,7 +348,7 @@ export async function GET() {
         `Desafio JM Fitness · Página ${pageCount}`,
         40,
         doc.page.height - 30,
-        { align: "center" }
+        { align: "center" },
       );
   });
 

@@ -1,9 +1,10 @@
+import { randomUUID } from "node:crypto";
+import { and, eq, isNull } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { requireApiSession } from "@/lib/api-auth";
 import { db } from "@/db";
 import { authUser, completion, task } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
-import { randomUUID } from "node:crypto";
+import { requireApiSession } from "@/lib/api-auth";
+import { todayInEventTimezone } from "@/lib/date";
 
 export const dynamic = "force-dynamic";
 
@@ -27,15 +28,20 @@ export async function POST(request: Request) {
     .limit(1);
 
   if (!taskRow || taskRow.status !== "active") {
-    return NextResponse.json({ error: "Tarefa não encontrada ou inativa" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Tarefa não encontrada ou inativa" },
+      { status: 404 },
+    );
   }
 
   if (taskRow.confirmation !== "automatic") {
     return NextResponse.json(
       { error: "Esta tarefa não usa confirmação automática" },
-      { status: 400 }
+      { status: 400 },
     );
   }
+
+  const day = taskRow.type === "checkin" ? todayInEventTimezone() : null;
 
   const [existing] = await db
     .select()
@@ -43,15 +49,20 @@ export async function POST(request: Request) {
     .where(
       and(
         eq(completion.taskId, taskId),
-        eq(completion.userId, auth.session.user.id)
-      )
+        eq(completion.userId, auth.session.user.id),
+        day ? eq(completion.day, day) : isNull(completion.day),
+      ),
     )
     .limit(1);
 
   if (existing) {
     return NextResponse.json(
-      { error: "Você já concluiu esta tarefa" },
-      { status: 409 }
+      {
+        error: day
+          ? "Você já fez o check-in de hoje"
+          : "Você já concluiu esta tarefa",
+      },
+      { status: 409 },
     );
   }
 
@@ -59,7 +70,7 @@ export async function POST(request: Request) {
   if (taskRow.type === "form" && !payload) {
     return NextResponse.json(
       { error: "Envie as respostas do formulário (payload)" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -72,6 +83,7 @@ export async function POST(request: Request) {
       status: "approved",
       payload: payload ?? {},
       pointsAwarded: taskRow.points,
+      day,
     })
     .returning();
 
@@ -92,5 +104,8 @@ export async function POST(request: Request) {
       .where(eq(authUser.id, user.id));
   }
 
-  return NextResponse.json({ completion: created, points: taskRow.points }, { status: 201 });
+  return NextResponse.json(
+    { completion: created, points: taskRow.points },
+    { status: 201 },
+  );
 }

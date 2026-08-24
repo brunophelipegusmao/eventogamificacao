@@ -1,7 +1,7 @@
 "use client";
 
+import { Crown, Medal, PartyPopper, Trophy } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { Crown, Medal, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type RankRow = {
@@ -18,11 +18,18 @@ type Prize = {
   placement: number;
 };
 
+type Winner = {
+  userId: string;
+  prizeName: string | null;
+};
+
 type RankingData = {
   ranking: RankRow[];
   me: RankRow | null;
   totalParticipants: number;
   prizes: Prize[];
+  eventClosed: boolean;
+  winners: Winner[];
 };
 
 export function RankingView() {
@@ -41,12 +48,15 @@ export function RankingView() {
   }, [load]);
 
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Carregando ranking...</p>;
+    return (
+      <p className="text-sm text-muted-foreground">Carregando ranking...</p>
+    );
   }
 
   if (!data) return null;
 
-  const { ranking, me, prizes } = data;
+  const { ranking, me, prizes, eventClosed, winners } = data;
+  const winnerByUser = new Map(winners.map((w) => [w.userId, w]));
 
   const rankIcon = (rank: number) =>
     rank === 1 ? (
@@ -64,6 +74,15 @@ export function RankingView() {
 
   return (
     <div className="space-y-4">
+      {eventClosed && (
+        <div className="flex items-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-4 py-3">
+          <PartyPopper className="size-5 shrink-0 text-primary" />
+          <p className="text-sm font-medium">
+            🏆 Evento encerrado — este é o placar final!
+          </p>
+        </div>
+      )}
+
       {me && (
         <div className="rounded-xl border border-primary/40 bg-primary/5 p-4 sm:p-5">
           <p className="text-sm text-muted-foreground">Sua colocação</p>
@@ -81,14 +100,23 @@ export function RankingView() {
               <p className="text-2xl font-bold">{me.totalPoints} pts</p>
             </div>
           </div>
-          {prizeForRank(me.rank) && (
-            <p className="mt-2 text-sm text-muted-foreground">
-              🎁 Prêmio atual:{" "}
-              <span className="font-medium text-foreground">
-                {prizeForRank(me.rank)?.name}
-              </span>
-            </p>
-          )}
+          {eventClosed
+            ? winnerByUser.get(me.id) && (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  🎁 Você ganhou:{" "}
+                  <span className="font-medium text-foreground">
+                    {winnerByUser.get(me.id)?.prizeName}
+                  </span>
+                </p>
+              )
+            : prizeForRank(me.rank) && (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  🎁 Prêmio atual:{" "}
+                  <span className="font-medium text-foreground">
+                    {prizeForRank(me.rank)?.name}
+                  </span>
+                </p>
+              )}
         </div>
       )}
 
@@ -107,7 +135,7 @@ export function RankingView() {
                 key={p.id}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3",
-                  me?.id === p.id && "bg-primary/5"
+                  me?.id === p.id && "bg-primary/5",
                 )}
               >
                 <span className="flex size-8 shrink-0 items-center justify-center">
@@ -118,8 +146,15 @@ export function RankingView() {
                   {me?.id === p.id && (
                     <p className="text-xs text-primary">Você</p>
                   )}
+                  {eventClosed && winnerByUser.get(p.id) && (
+                    <p className="truncate text-xs text-muted-foreground">
+                      🏆 {winnerByUser.get(p.id)?.prizeName}
+                    </p>
+                  )}
                 </div>
-                <span className="font-bold text-primary">{p.totalPoints} pts</span>
+                <span className="font-bold text-primary">
+                  {p.totalPoints} pts
+                </span>
               </li>
             ))}
           </ul>

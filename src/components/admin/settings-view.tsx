@@ -1,8 +1,8 @@
 "use client";
 
 import { Input } from "@base-ui/react/input";
-import Image from "next/image";
 import { Plus, Trash2 } from "lucide-react";
+import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -22,12 +22,11 @@ const DEFAULT_PROMO_MEDIA: PromoMedia = {
   type: "image",
   url: "/images/promo-event.jpeg",
 };
+const DEFAULT_PWA_ICON = "/logos/jm_512x512.webp";
 
 export function AdminSettingsView() {
   const [logos, setLogos] = useState<string[]>([DEFAULT_LOGO]);
-  const [products, setProducts] = useState<SponsorProduct[]>([
-    EMPTY_PRODUCT,
-  ]);
+  const [products, setProducts] = useState<SponsorProduct[]>([EMPTY_PRODUCT]);
   const [loading, setLoading] = useState(true);
 
   const [saving, setSaving] = useState(false);
@@ -43,18 +42,26 @@ export function AdminSettingsView() {
   const [promoError, setPromoError] = useState<string | null>(null);
   const [promoSuccess, setPromoSuccess] = useState(false);
 
+  const [pwaIconUrl, setPwaIconUrl] = useState(DEFAULT_PWA_ICON);
+  const [pwaIconSaving, setPwaIconSaving] = useState(false);
+  const [pwaIconError, setPwaIconError] = useState<string | null>(null);
+  const [pwaIconSuccess, setPwaIconSuccess] = useState(false);
+
   const load = useCallback(async () => {
     const res = await fetch("/api/admin/settings");
     const data = await res.json();
     setLogos(
       data.settings?.sponsorLogos?.length
         ? data.settings.sponsorLogos
-        : [DEFAULT_LOGO]
+        : [DEFAULT_LOGO],
     );
     setProducts(
-      data.settings?.products?.length ? data.settings.products : [EMPTY_PRODUCT]
+      data.settings?.products?.length
+        ? data.settings.products
+        : [EMPTY_PRODUCT],
     );
     setPromoMedia(data.settings?.promoMedia ?? DEFAULT_PROMO_MEDIA);
+    setPwaIconUrl(data.settings?.pwaIconUrl || DEFAULT_PWA_ICON);
     setLoading(false);
   }, []);
 
@@ -63,9 +70,7 @@ export function AdminSettingsView() {
   }, [load]);
 
   function addLogo() {
-    setLogos((prev) =>
-      prev.length >= MAX_LOGOS ? prev : [...prev, ""]
-    );
+    setLogos((prev) => (prev.length >= MAX_LOGOS ? prev : [...prev, ""]));
   }
 
   function updateLogo(index: number, value: string) {
@@ -104,16 +109,13 @@ export function AdminSettingsView() {
 
   function addProduct() {
     setProducts((prev) =>
-      prev.length >= MAX_PRODUCTS ? prev : [...prev, { ...EMPTY_PRODUCT }]
+      prev.length >= MAX_PRODUCTS ? prev : [...prev, { ...EMPTY_PRODUCT }],
     );
   }
 
-  function updateProductField(
-    index: number,
-    patch: Partial<SponsorProduct>
-  ) {
+  function updateProductField(index: number, patch: Partial<SponsorProduct>) {
     setProducts((prev) =>
-      prev.map((p, i) => (i === index ? { ...p, ...patch } : p))
+      prev.map((p, i) => (i === index ? { ...p, ...patch } : p)),
     );
   }
 
@@ -179,6 +181,30 @@ export function AdminSettingsView() {
     setPromoMedia(data.settings.promoMedia);
     setPromoSuccess(true);
     setPromoSaving(false);
+  }
+
+  async function handlePwaIconSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setPwaIconError(null);
+    setPwaIconSuccess(false);
+
+    setPwaIconSaving(true);
+    const res = await fetch("/api/admin/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pwaIconUrl: pwaIconUrl.trim() }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      setPwaIconError(data.error ?? "Erro ao salvar ícone do app");
+      setPwaIconSaving(false);
+      return;
+    }
+
+    setPwaIconUrl(data.settings.pwaIconUrl);
+    setPwaIconSuccess(true);
+    setPwaIconSaving(false);
   }
 
   if (loading) {
@@ -348,9 +374,7 @@ export function AdminSettingsView() {
                 </FieldGroup>
 
                 <FieldGroup className="sm:col-span-2">
-                  <FieldLabel htmlFor={`p-desc-${index}`}>
-                    Descrição
-                  </FieldLabel>
+                  <FieldLabel htmlFor={`p-desc-${index}`}>Descrição</FieldLabel>
                   <Input
                     id={`p-desc-${index}`}
                     value={product.description}
@@ -505,8 +529,8 @@ export function AdminSettingsView() {
         )}
 
         <p className="mt-3 text-xs text-muted-foreground">
-          Se a URL ficar vazia, a mídia padrão ({DEFAULT_PROMO_MEDIA.url})
-          será usada.
+          Se a URL ficar vazia, a mídia padrão ({DEFAULT_PROMO_MEDIA.url}) será
+          usada.
         </p>
 
         {promoError && (
@@ -523,6 +547,63 @@ export function AdminSettingsView() {
 
         <Button type="submit" disabled={promoSaving} className="mt-4">
           {promoSaving ? "Salvando..." : "Salvar mídia de destaque"}
+        </Button>
+      </form>
+
+      <form
+        onSubmit={handlePwaIconSubmit}
+        className="rounded-xl border border-border bg-card p-4 sm:p-5"
+      >
+        <h2 className="mb-1 font-semibold">Ícone do app (tela de início)</h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Imagem usada quando alguém instala o app na tela inicial do
+          celular/PC. Cada evento pode ter o seu — imagem quadrada, ideal
+          512×512.
+        </p>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-background">
+            {pwaIconUrl ? (
+              <Image
+                src={pwaIconUrl}
+                width={64}
+                height={64}
+                alt=""
+                className="size-16 object-contain"
+              />
+            ) : null}
+          </div>
+
+          <FieldGroup className="flex-1">
+            <FieldLabel htmlFor="pwa-icon">URL do ícone</FieldLabel>
+            <Input
+              id="pwa-icon"
+              value={pwaIconUrl}
+              onChange={(e) => setPwaIconUrl(e.target.value)}
+              placeholder={DEFAULT_PWA_ICON}
+              className="h-10 w-full rounded-lg border-border bg-background px-3"
+            />
+          </FieldGroup>
+        </div>
+
+        <p className="mt-3 text-xs text-muted-foreground">
+          Se a URL ficar vazia, o ícone padrão ({DEFAULT_PWA_ICON}) será usado.
+        </p>
+
+        {pwaIconError && (
+          <p className="mt-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {pwaIconError}
+          </p>
+        )}
+
+        {pwaIconSuccess && (
+          <p className="mt-3 rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
+            Ícone do app salvo com sucesso.
+          </p>
+        )}
+
+        <Button type="submit" disabled={pwaIconSaving} className="mt-4">
+          {pwaIconSaving ? "Salvando..." : "Salvar ícone do app"}
         </Button>
       </form>
     </div>

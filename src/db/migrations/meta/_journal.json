@@ -50,6 +50,27 @@
       "when": 1786824320218,
       "tag": "0006_small_black_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787178365796,
+      "tag": "0007_steady_cardiac",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1787178916242,
+      "tag": "0008_glorious_iron_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1787599957033,
+      "tag": "0009_lean_starjammers",
+      "breakpoints": true
     }
   ]
 }

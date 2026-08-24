@@ -1,18 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@base-ui/react/input";
-import { FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
-  Download,
-  Flag,
-  Trophy,
-  Users,
+  AlertTriangle,
   CheckCircle2,
   Clock,
   Crown,
+  Download,
+  Flag,
+  Trash2,
+  Trophy,
+  Users,
 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { FieldGroup, FieldLabel } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 
 type Activity = {
@@ -61,10 +63,20 @@ type ReportData = {
   totalPoints: number;
   approvedCount: number;
   pendingCount: number;
-  tasks: { id: string; title: string; type: string; points: number; approved: number; totalAttempts: number; rate: number }[];
+  tasks: {
+    id: string;
+    title: string;
+    type: string;
+    points: number;
+    approved: number;
+    totalAttempts: number;
+    rate: number;
+  }[];
   prizes: Prize[];
   winners: Winner[];
 };
+
+const RESET_CONFIRM_PHRASE = "APAGAR TUDO";
 
 export function ReportView() {
   const [data, setData] = useState<ReportData | null>(null);
@@ -74,6 +86,15 @@ export function ReportView() {
   const [prizeName, setPrizeName] = useState("");
   const [prizeDesc, setPrizeDesc] = useState("");
   const [prizePlacement, setPrizePlacement] = useState(1);
+  const [pdfDownloaded, setPdfDownloaded] = useState(false);
+  const [resetConfirmText, setResetConfirmText] = useState("");
+  const [resetting, setResetting] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resetDone, setResetDone] = useState<{
+    participants: number;
+    tasks: number;
+    prizes: number;
+  } | null>(null);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/admin/report");
@@ -89,7 +110,7 @@ export function ReportView() {
   async function endEvent() {
     if (
       !confirm(
-        "Encerrar o evento? O ranking será congelado e os vencedores determinados. Esta ação não pode ser desfeita."
+        "Encerrar o evento? O ranking será congelado e os vencedores determinados. Esta ação não pode ser desfeita.",
       )
     )
       return;
@@ -115,6 +136,29 @@ export function ReportView() {
     a.download = "relatorio-evento-jm.pdf";
     a.click();
     URL.revokeObjectURL(url);
+    setPdfDownloaded(true);
+  }
+
+  async function resetDatabase(e: React.FormEvent) {
+    e.preventDefault();
+    setResetError(null);
+    setResetting(true);
+    const res = await fetch("/api/admin/event/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirmPhrase: resetConfirmText }),
+    });
+    const d = await res.json();
+    setResetting(false);
+    if (!res.ok) {
+      setResetError(d.error ?? "Erro ao limpar o banco");
+      return;
+    }
+    setResetDone({
+      participants: d.participants,
+      tasks: d.tasks,
+      prizes: d.prizes,
+    });
   }
 
   async function addPrize(e: React.FormEvent) {
@@ -144,7 +188,9 @@ export function ReportView() {
   }
 
   if (loading) {
-    return <p className="text-sm text-muted-foreground">Carregando relatório...</p>;
+    return (
+      <p className="text-sm text-muted-foreground">Carregando relatório...</p>
+    );
   }
   if (!data) return null;
 
@@ -153,7 +199,11 @@ export function ReportView() {
   const stats = [
     { label: "Participantes", value: data.totalParticipants, icon: Users },
     { label: "Pontos emitidos", value: data.totalPoints, icon: Trophy },
-    { label: "Tarefas concluídas", value: data.approvedCount, icon: CheckCircle2 },
+    {
+      label: "Tarefas concluídas",
+      value: data.approvedCount,
+      icon: CheckCircle2,
+    },
     { label: "Pendentes", value: data.pendingCount, icon: Clock },
   ];
 
@@ -173,11 +223,7 @@ export function ReportView() {
             <Download className="size-4" /> Baixar PDF
           </Button>
           {!isClosed ? (
-            <Button
-              variant="destructive"
-              onClick={endEvent}
-              disabled={ending}
-            >
+            <Button variant="destructive" onClick={endEvent} disabled={ending}>
               <Flag className="size-4" />
               {ending ? "Encerrando..." : "Encerrar evento"}
             </Button>
@@ -233,7 +279,9 @@ export function ReportView() {
                   >
                     <span className="flex items-center gap-2">
                       <span className="font-bold text-primary">{w.rank}º</span>
-                      <span className="font-medium">{user?.name ?? "Participante"}</span>
+                      <span className="font-medium">
+                        {user?.name ?? "Participante"}
+                      </span>
                     </span>
                     <span className="text-muted-foreground">
                       🏆 {w.prizeName} · {w.totalPoints} pts
@@ -308,7 +356,11 @@ export function ReportView() {
                     até {p.placement}º lugar
                   </span>
                 </span>
-                <Button variant="ghost" size="sm" onClick={() => togglePrize(p)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => togglePrize(p)}
+                >
                   {p.active ? "Desativar" : "Ativar"}
                 </Button>
               </li>
@@ -326,16 +378,13 @@ export function ReportView() {
           {data.ranking.map((p) => {
             const w = data.winners.find((x) => x.userId === p.id);
             return (
-              <li
-                key={p.id}
-                className="flex items-center gap-3 px-4 py-3"
-              >
+              <li key={p.id} className="flex items-center gap-3 px-4 py-3">
                 <span
                   className={cn(
                     "flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-bold",
                     p.rank <= 3
                       ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
+                      : "bg-muted text-muted-foreground",
                   )}
                 >
                   {p.rank}
@@ -348,7 +397,9 @@ export function ReportView() {
                     </p>
                   )}
                 </div>
-                <span className="font-bold text-primary">{p.totalPoints} pts</span>
+                <span className="font-bold text-primary">
+                  {p.totalPoints} pts
+                </span>
               </li>
             );
           })}
@@ -372,7 +423,9 @@ export function ReportView() {
                     {p.instagram ? ` · @${p.instagram}` : ""}
                   </p>
                 </div>
-                <span className="font-bold text-primary">{p.totalPoints} pts</span>
+                <span className="font-bold text-primary">
+                  {p.totalPoints} pts
+                </span>
               </div>
               {p.activities.length === 0 ? (
                 <p className="mt-2 text-sm text-muted-foreground">
@@ -394,7 +447,7 @@ export function ReportView() {
                               ? "text-emerald-400"
                               : a.status === "pending"
                                 ? "text-amber-400"
-                                : "text-destructive"
+                                : "text-destructive",
                           )}
                         >
                           {a.status === "approved"
@@ -431,6 +484,79 @@ export function ReportView() {
           ))}
         </div>
       </div>
+
+      {/* ===== Zona de risco: limpar banco para o próximo evento ===== */}
+      {isClosed && (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 sm:p-5">
+          <h2 className="mb-1 flex items-center gap-2 font-semibold text-destructive">
+            <AlertTriangle className="size-5" /> Zona de risco
+          </h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Evento encerrado. Baixe o PDF com todos os dados antes de limpar o
+            banco — a limpeza apaga participantes, check-ins, ajustes de pontos,
+            vencedores, tarefas e prêmios, deixando tudo pronto para o próximo
+            evento. Esta ação não pode ser desfeita.
+          </p>
+
+          {resetDone ? (
+            <div className="space-y-3">
+              <p className="rounded-lg bg-emerald-500/15 px-3 py-2 text-sm text-emerald-400">
+                Banco limpo com sucesso: {resetDone.participants} participantes,{" "}
+                {resetDone.tasks} tarefas e {resetDone.prizes} prêmios
+                removidos.
+              </p>
+              <Button onClick={() => window.location.reload()}>
+                Recarregar painel
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <Button variant="outline" onClick={downloadPdf}>
+                <Download className="size-4" /> Baixar PDF e continuar
+              </Button>
+
+              {pdfDownloaded && (
+                <form
+                  onSubmit={resetDatabase}
+                  className="flex flex-col gap-3 rounded-lg border border-destructive/30 bg-card p-3 sm:flex-row sm:items-end"
+                >
+                  <FieldGroup className="sm:flex-1">
+                    <FieldLabel htmlFor="reset-confirm">
+                      Digite "{RESET_CONFIRM_PHRASE}" para confirmar
+                    </FieldLabel>
+                    <Input
+                      id="reset-confirm"
+                      required
+                      value={resetConfirmText}
+                      onChange={(e) => setResetConfirmText(e.target.value)}
+                      placeholder={RESET_CONFIRM_PHRASE}
+                      className="h-10 w-full rounded-lg border-border bg-background px-3"
+                    />
+                  </FieldGroup>
+                  <Button
+                    type="submit"
+                    variant="destructive"
+                    disabled={
+                      resetting ||
+                      resetConfirmText.trim().toUpperCase() !==
+                        RESET_CONFIRM_PHRASE
+                    }
+                  >
+                    <Trash2 className="size-4" />
+                    {resetting ? "Limpando..." : "Limpar banco de dados"}
+                  </Button>
+                </form>
+              )}
+
+              {resetError && (
+                <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  {resetError}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

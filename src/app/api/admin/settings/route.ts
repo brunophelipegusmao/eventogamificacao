@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
-import { requireApiSession } from "@/lib/api-auth";
 import type { PromoMedia, SponsorProduct } from "@/db/schema";
+import { requireApiSession } from "@/lib/api-auth";
 import {
   DEFAULT_PROMO_MEDIA,
+  DEFAULT_PWA_ICON_URL,
   DEFAULT_SPONSOR_LOGOS,
   getSiteSettings,
   updateProducts,
   updatePromoMedia,
+  updatePwaIcon,
   updateSponsorLogos,
 } from "@/lib/site-settings";
 
@@ -49,7 +51,7 @@ export async function PUT(request: Request) {
     if (!Array.isArray(logos)) {
       return NextResponse.json(
         { error: "sponsorLogos deve ser uma lista de URLs" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -66,7 +68,7 @@ export async function PUT(request: Request) {
     if (cleaned.length > 6) {
       return NextResponse.json(
         { error: "No máximo 6 imagens são permitidas" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -79,7 +81,7 @@ export async function PUT(request: Request) {
     if (!Array.isArray(products)) {
       return NextResponse.json(
         { error: "products deve ser uma lista de produtos" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -90,14 +92,14 @@ export async function PUT(request: Request) {
     if (cleaned.length === 0) {
       return NextResponse.json(
         { error: "Informe ao menos um produto." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (cleaned.length > 6) {
       return NextResponse.json(
         { error: "No máximo 6 produtos são permitidos." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -110,27 +112,32 @@ export async function PUT(request: Request) {
     if (!raw || typeof raw !== "object") {
       return NextResponse.json(
         { error: "promoMedia inválido" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const r = raw as Record<string, unknown>;
-    const type = r.type === "video" ? "video" : r.type === "image" ? "image" : null;
+    const type =
+      r.type === "video" ? "video" : r.type === "image" ? "image" : null;
 
     if (!type) {
       return NextResponse.json(
         { error: "promoMedia.type deve ser 'image' ou 'video'" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const url = typeof r.url === "string" ? r.url.trim() : "";
 
-    const media: PromoMedia = url
-      ? { type, url }
-      : { ...DEFAULT_PROMO_MEDIA };
+    const media: PromoMedia = url ? { type, url } : { ...DEFAULT_PROMO_MEDIA };
 
     settings = await updatePromoMedia(media);
+  }
+
+  if ("pwaIconUrl" in body) {
+    const raw =
+      typeof body.pwaIconUrl === "string" ? body.pwaIconUrl.trim() : "";
+    settings = await updatePwaIcon(raw || DEFAULT_PWA_ICON_URL);
   }
 
   return NextResponse.json({ settings });

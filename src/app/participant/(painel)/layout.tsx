@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { requireSession } from "@/lib/session";
 import { SignOutButton } from "@/components/common/sign-out-button";
+import { PushNotifications } from "@/components/participant/push-notifications";
+import { InstallAppButton } from "@/components/pwa/install-app-button";
+import { requireSession } from "@/lib/session";
 
 export default async function ParticipantLayout({
   children,
@@ -20,6 +22,8 @@ export default async function ParticipantLayout({
             Desafio JM Fitness
           </Link>
           <div className="flex items-center gap-3">
+            <PushNotifications />
+            <InstallAppButton />
             <span className="hidden text-sm text-muted-foreground sm:block">
               {session.user.name}
             </span>

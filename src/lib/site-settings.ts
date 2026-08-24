@@ -1,9 +1,14 @@
-import { db } from "@/db";
-import { siteSettings, type PromoMedia, type SponsorProduct } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import {
+  type PromoMedia,
+  type SponsorProduct,
+  siteSettings,
+} from "@/db/schema";
 
 const SITE_SETTINGS_ID = "site-settings";
 const DEFAULT_SPONSOR_LOGOS = ["/logos/jm_512x512.webp"];
+const DEFAULT_PWA_ICON_URL = "/logos/jm_512x512.webp";
 
 const DEFAULT_PRODUCTS: SponsorProduct[] = [
   {
@@ -58,6 +63,7 @@ export async function getSiteSettings() {
       sponsorLogos: DEFAULT_SPONSOR_LOGOS,
       products: DEFAULT_PRODUCTS,
       promoMedia: DEFAULT_PROMO_MEDIA,
+      pwaIconUrl: DEFAULT_PWA_ICON_URL,
     })
     .returning();
 
@@ -100,9 +106,22 @@ export async function updatePromoMedia(media: PromoMedia) {
   return updated;
 }
 
+export async function updatePwaIcon(url: string) {
+  await getSiteSettings();
+
+  const [updated] = await db
+    .update(siteSettings)
+    .set({ pwaIconUrl: url, updatedAt: new Date() })
+    .where(eq(siteSettings.id, SITE_SETTINGS_ID))
+    .returning();
+
+  return updated;
+}
+
 export {
   SITE_SETTINGS_ID,
   DEFAULT_SPONSOR_LOGOS,
   DEFAULT_PRODUCTS,
   DEFAULT_PROMO_MEDIA,
+  DEFAULT_PWA_ICON_URL,
 };

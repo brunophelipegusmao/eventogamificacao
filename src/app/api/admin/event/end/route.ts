@@ -1,10 +1,11 @@
+import { randomUUID } from "node:crypto";
+import { asc, desc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { requireApiSession } from "@/lib/api-auth";
 import { db } from "@/db";
 import { authUser, event, prize, winner } from "@/db/schema";
-import { asc, desc, eq } from "drizzle-orm";
+import { requireApiSession } from "@/lib/api-auth";
 import { EVENT_ID } from "@/lib/event";
-import { randomUUID } from "node:crypto";
+import { sendPushToAllParticipants } from "@/lib/push";
 
 export const dynamic = "force-dynamic";
 
@@ -25,14 +26,14 @@ export async function POST() {
   if (!evt) {
     return NextResponse.json(
       { error: "Evento não encontrado. Rode o seed primeiro." },
-      { status: 404 }
+      { status: 404 },
     );
   }
 
   if (evt.status === "closed") {
     return NextResponse.json(
       { error: "O evento já foi encerrado." },
-      { status: 409 }
+      { status: 409 },
     );
   }
 
@@ -97,6 +98,16 @@ export async function POST() {
       await tx.insert(winner).values(winners);
     }
   });
+
+  try {
+    await sendPushToAllParticipants({
+      title: "🏆 Evento encerrado!",
+      body: "O placar final já está disponível. Confira sua colocação e os vencedores!",
+      url: "/participant/ranking",
+    });
+  } catch {
+    // Falha no envio de push não deve impedir a resposta de encerramento.
+  }
 
   return NextResponse.json({
     message: "Evento encerrado com sucesso.",

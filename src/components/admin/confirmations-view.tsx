@@ -1,8 +1,8 @@
 "use client";
 
+import { Check, ExternalLink, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, X, ExternalLink } from "lucide-react";
 
 type PendingCompletion = {
   id: string;
@@ -14,7 +14,12 @@ type PendingCompletion = {
 };
 
 type TaskInfo = { id: string; title: string; points: number };
-type UserInfo = { id: string; name: string; email: string; instagram: string | null };
+type UserInfo = {
+  id: string;
+  name: string;
+  email: string;
+  instagram: string | null;
+};
 
 export function AdminConfirmationsView() {
   const [completions, setCompletions] = useState<PendingCompletion[]>([]);
@@ -35,20 +40,20 @@ export function AdminConfirmationsView() {
 
     setCompletions(cData.completions ?? []);
     setTasks(
-      Object.fromEntries(
-        (tData.tasks ?? []).map((t: TaskInfo) => [t.id, t])
-      )
+      Object.fromEntries((tData.tasks ?? []).map((t: TaskInfo) => [t.id, t])),
     );
     setUsers(
       Object.fromEntries(
-        (dData.participants ?? []).map((u: UserInfo) => [u.id, u])
-      )
+        (dData.participants ?? []).map((u: UserInfo) => [u.id, u]),
+      ),
     );
     setLoading(false);
   }, []);
 
   useEffect(() => {
     load();
+    const id = setInterval(load, 20_000);
+    return () => clearInterval(id);
   }, [load]);
 
   async function decide(id: string, decision: "approved" | "rejected") {
@@ -98,13 +103,17 @@ export function AdminConfirmationsView() {
                   className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-start sm:justify-between"
                 >
                   <div className="min-w-0">
-                    <p className="font-medium">{user?.name ?? "Participante"}</p>
+                    <p className="font-medium">
+                      {user?.name ?? "Participante"}
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       {user?.email ?? ""}
                       {user?.instagram ? ` · @${user.instagram}` : ""}
                     </p>
                     <p className="mt-2 text-sm">
-                      <span className="font-medium">{task?.title ?? "Tarefa"}</span>{" "}
+                      <span className="font-medium">
+                        {task?.title ?? "Tarefa"}
+                      </span>{" "}
                       <span className="text-muted-foreground">
                         · {task?.points ?? 0} pts
                       </span>
