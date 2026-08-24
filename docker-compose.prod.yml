@@ -6,6 +6,7 @@ services:
       target: runner
       args:
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+        NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
     image: evento-gamificacao:latest
     container_name: evento_gamificacao_app
     restart: unless-stopped
@@ -28,6 +29,7 @@ services:
       target: builder
       args:
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+        NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
     image: evento-gamificacao:builder
     env_file:
       - .env.production
