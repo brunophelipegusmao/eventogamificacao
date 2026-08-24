@@ -9,6 +9,8 @@ function iconMimeType(url: string): string {
   return "image/png";
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const settings = await getSiteSettings();
   const iconUrl = settings.pwaIconUrl || "/logos/jm_512x512.webp";
